@@ -11182,6 +11182,311 @@ applypilot ops emergency maintenance --disable
 
 ---
 
+## 53) Developer Experience (Enterprise-Grade)
+
+### 53.1 Overview
+
+Developer Experience provides comprehensive tools, documentation, and workflows for developers working on ApplyPilot. This section defines local development setup, debugging tooling, performance profiling, and development best practices.
+
+### 53.2 Local Development Setup
+
+One-command environment setup with Docker Compose for local development.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      LOCAL DEVELOPMENT SETUP ARCHITECTURE            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   ONE-COMMAND SETUP                                                      │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │  Setup command: `npm install && npm run dev:setup`   │   │
+│   │  • Install dependencies: Install all npm packages   │   │
+│   │  • Setup databases: Initialize SQLite databases        │   │
+│   │  • Setup configuration: Create default config files  │   │
+│   │  • Setup workspace: Create workspace directories    │   │
+│   │  • Setup environment: Set up environment variables   │   │
+│   │  • Run migrations: Run database migrations         │   │
+│   │  • Seed data: Seed with sample data              │   │
+│   │  • Verify setup: Verify all services running      │   │
+│   │                                                              │   │
+│   │  DOCKER COMPOSE SETUP                                     │   │
+│   │  ┌─────────────────────────────────────────────────────────────┐   │
+│   │  │  Services:                                           │   │
+│   │  │  • Gateway: Main ApplyPilot gateway service   │   │
+│   │  │  • Database: SQLite database (mounted volume) │   │
+│   │  │  • Redis: Cache service (optional)           │   │
+│   │  │  • Ollama: LLM provider (optional)          │   │
+│   │  │  • Browser: Headless Chrome (optional)         │   │
+│   │  │                                                              │   │
+│   │  │  Docker Compose configuration:                     │   │
+│   │  │  • Network: Docker network for services   │   │
+│   │  │  • Volumes: Mount volumes for persistence    │   │
+│   │  │  • Environment: Shared environment variables │   │
+│   │  │  • Health checks: Health check endpoints    │   │
+│   │  │  • Logging: Centralized logging           │   │
+│   │  │                                                              │   │
+│   │  │  Docker Compose commands:                         │   │
+│   │  │  • `docker-compose up -d`: Start all services │   │
+│   │  │  • `docker-compose down`: Stop all services  │   │
+│   │  │  • `docker-compose logs`: View logs          │   │
+│   │  │  • `docker-compose restart`: Restart services   │   │
+│   │  │  • `docker-compose ps`: View service status    │   │
+│   │  └─────────────────────────────────────────────────────────────┘   │
+│   │                                                              │
+│   │  MOCK SERVICES FOR EXTERNAL DEPENDENCIES                         │   │
+│   │  ┌─────────────────────────────────────────────────────────────┐   │
+│   │  │  Mock LLM providers: Mock LLM responses     │   │
+│   │  │  • Mock portal APIs: Mock portal API responses  │   │
+│   │  │  • Mock file system: Mock file operations     │   │
+│   │  │  • Mock network: Mock network requests       │   │
+│   │  │  • Mock time: Mock time for testing           │   │
+│   │  │                                                              │   │
+│   │  │  Mock configuration:                             │   │
+│   │  │  • Enable/disable mocks: Toggle mocks per service │   │
+│   │  │  • Mock responses: Configure mock responses      │   │
+│   │  │  • Mock delays: Configure mock delays          │   │
+│   │  │  • Mock errors: Configure mock errors           │   │
+│   │  │  • Recording: Record mock interactions         │   │
+│   │  └─────────────────────────────────────────────────────────────┘   │
+│   │                                                              │
+│   │  HOT RELOAD CONFIGURATION                                     │   │
+│   │  ┌─────────────────────────────────────────────────────────────┐   │
+│   │  │  Code changes: Auto-reload on code changes   │   │
+│   │  │  • Config changes: Auto-reload on config changes │   │
+│   │  │  • File changes: Auto-reload on file changes   │   │
+│   │  │  • Debounce: Debounce reloads to prevent spam │   │
+│   │  │  • Notifications: Notify on reload             │   │
+│   │  │  • Error handling: Handle reload errors gracefully │   │
+│   │  └─────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 53.3 Debugging Tooling
+
+Integrated debugging UI with request/response inspection tools.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      DEBUGGING TOOLING ARCHITECTURE                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   DEBUGGING UI FEATURES                                                   │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │  REQUEST INSPECTION ← View all incoming requests    │   │
+│   │  • Request headers: View all request headers       │   │
+│   │  • Request body: View request body (formatted)     │   │
+│   │  • Request params: View request parameters         │   │
+│   │  • Request timing: View request timing metrics    │   │
+│   │  • Request ID: Unique request ID for tracking     │   │
+│   │                                                              │   │
+│   │  RESPONSE INSPECTION ← View all outgoing responses │   │
+│   │  • Response headers: View all response headers   │   │
+│   │  • Response body: View response body (formatted)   │   │
+│   │  • Response status: View HTTP status codes        │   │
+│   │  • Response timing: View response timing metrics  │   │
+│   │  • Response size: View response size metrics      │   │
+│   │                                                              │   │
+│   │  TRACE INSPECTION ← View distributed traces       │   │
+│   │  • Trace tree: Visualize trace as tree          │   │
+│   │  • Trace timeline: Visualize trace timeline      │   │
+│   │  • Span details: View span details on click     │   │
+│   │  • Span events: View span events              │   │
+│   │  • Span links: Navigate between related spans    │   │
+│   │  • Trace search: Search traces by ID, user, time │   │
+│   │                                                              │   │
+│   │  LOG INSPECTION ← View application logs         │   │
+│   │  • Log levels: Filter logs by level (error, warn, info, debug) │   │
+│   │  • Log sources: Filter logs by source (gateway, agent, tools) │   │
+│   │  • Log search: Search logs by text, regex       │   │
+│   │  • Log filtering: Filter logs by time range     │   │
+│   │  • Log export: Export logs as JSON, CSV          │   │
+│   │                                                              │   │
+│   │  METRICS INSPECTION ← View application metrics  │   │
+│   │  • Metrics dashboard: View metrics in dashboard │   │
+│   │  • Metrics charts: View metrics as charts      │   │
+│   │  • Metrics filtering: Filter metrics by tags     │   │
+│   │  • Metrics aggregation: Aggregate metrics by time  │   │
+│   │  • Metrics comparison: Compare metrics over time │   │
+│   │  └─────────────────────────────────────────────────────────────┘   │
+│   │                                                              │
+│   │  DEBUGGING WORKFLOWS                                            │   │
+│   │  ┌─────────────────────────────────────────────────────────────┐   │
+│   │  │  Set breakpoint: Set breakpoint in code        │   │
+│   │  │  Step through code: Step through code line by line │   │
+│   │  │  Inspect variables: Inspect variable values     │   │
+│   │  │  Watch expressions: Watch expressions for changes │   │
+│   │  │  Evaluate expressions: Evaluate expressions in debugger │   │
+│   │  │  Call stack: View call stack                   │   │
+│   │  │  Exception handling: Catch and debug exceptions │   │
+│   │  │  Console logging: Log to console for debugging  │   │
+│   │  └─────────────────────────────────────────────────────────────┘   │
+│   │                                                              │
+│   │  REMOTE DEBUGGING                                              │   │
+│   │  ┌─────────────────────────────────────────────────────────────┐   │
+│   │  │  Remote debugging: Debug running instances       │   │
+│   │  │  • Attach debugger: Attach to running process   │   │
+│   │  │  • Remote console: Access remote console       │   │
+│   │  │  • Remote profiling: Profile running instance    │   │
+│   │  │  • Remote logs: Access remote logs            │   │
+│   │  │  • Remote metrics: Access remote metrics      │   │
+│   │  │  • Secure: Use secure connection (SSH, TLS) │   │
+│   │  └─────────────────────────────────────────────────────────────┘   │
+│   │                                                              │
+│   │  DEBUGGING BEST PRACTICES                                       │   │
+│   │  ┌─────────────────────────────────────────────────────────────┐   │
+│   │  │  Use meaningful logs: Log with context      │   │
+│   │  │  Use structured logging: Use structured logs (JSON) │   │
+│   │  │  Use log levels: Use appropriate log levels    │   │
+│   │  │  Use unique IDs: Use unique IDs for tracking  │   │
+│   │  │  Use tracing: Use distributed tracing        │   │
+│   │  │  Use metrics: Use metrics for monitoring     │   │
+│   │  │  Use error handling: Handle errors gracefully │   │
+│   │  │  Use validation: Validate inputs early        │   │
+│   │  │  Use testing: Write tests for debugging     │   │
+│   │  └─────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 53.4 Performance Profiling
+
+CPU profiling, memory profiling, I/O bottleneck identification, and performance regression detection.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      PERFORMANCE PROFILING ARCHITECTURE              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   PROFILING TYPES                                                        │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │  CPU PROFILING ← Profile CPU usage and bottlenecks   │   │
+│   │  • Sampling profiler: Sample CPU usage periodically  │   │
+│   │  • Flame graphs: Visualize CPU usage as flame graph │   │
+│   │  • Function profiling: Profile function execution time │   │
+│   │  • Call tree: Visualize call tree               │   │
+│   │  • Hot paths: Identify frequently executed code    │   │
+│   │  • CPU time: Measure CPU time per function        │   │
+│   │  • Wall time: Measure wall time per function      │   │
+│   │                                                              │   │
+│   │  MEMORY PROFILING ← Profile memory usage and leaks   │   │
+│   │  • Heap snapshots: Capture heap snapshots          │   │
+│   │  • Allocation tracking: Track memory allocations    │   │
+│   │  • Garbage collection: Monitor GC events          │   │
+│   │  • Memory leaks: Detect memory leaks              │   │
+│   │  • Memory usage: Track memory usage over time     │   │
+│   │  • Memory fragmentation: Track memory fragmentation │   │
+│   │                                                              │   │
+│   │  I/O PROFILING ← Profile I/O operations         │   │
+│   │  • File I/O: Profile file read/write operations │   │
+│   │  • Network I/O: Profile network requests        │   │
+│   │  • Database I/O: Profile database operations     │   │
+│   │  • I/O bottlenecks: Identify I/O bottlenecks  │   │
+│   │  • I/O patterns: Identify I/O usage patterns    │   │
+│   │  • I/O optimization: Suggest I/O optimizations │   │
+│   │                                                              │   │
+│   │  PERFORMANCE REGRESSION DETECTION                              │   │
+│   │  ┌─────────────────────────────────────────────────────────────┐   │
+│   │  │  Baseline establishment: Establish performance baseline │   │
+│   │  │  • Metrics: CPU, memory, latency, throughput    │   │
+│   │  │  • Duration: Collect baseline for 7 days         │   │
+│   │  │  • Samples: Collect 1000 samples per metric    │   │
+│   │  │  • Statistical analysis: Calculate mean, std dev, percentiles │   │
+│   │  │                                                              │   │
+│   │  │  Regression detection:                              │   │
+│   │  │  • Threshold: Alert if performance degrades >10% │   │
+│   │  │  • Statistical test: Use statistical test for significance │   │
+│   │  │  • Trend analysis: Detect performance trends    │   │
+│   │  │  • Anomaly detection: Detect performance anomalies │   │
+│   │  │  • Alert on regression: Alert on performance regression │   │
+│   │  │  • Block deployment: Block deployment if regression detected │   │
+│   │  │                                                              │   │
+│   │  │  Performance comparison:                             │   │
+│   │  │  • Compare to baseline: Compare to baseline     │   │
+│   │  │  • Compare to previous: Compare to previous version │   │
+│   │  │  • Compare to peers: Compare to similar systems  │   │
+│   │  │  • Compare to SLA: Compare to SLA targets     │   │
+│   │  │  • Report findings: Report performance findings     │   │
+│   │  └─────────────────────────────────────────────────────────────┘   │
+│   │                                                              │
+│   │  PROFILING TOOLS                                             │   │
+│   │  ┌─────────────────────────────────────────────────────────────┐   │
+│   │  │  Node.js profiler: Built-in Node.js profiler    │   │
+│   │  │  • Chrome DevTools: Chrome DevTools profiling │   │
+│   │  │  • Clinic.js: Node.js profiling toolset      │   │
+│   │  │  • 0x: Node.js profiling tool               │   │
+│   │  │  • pprof: Go profiler (if applicable)         │   │
+│   │  │  • py-spy: Python profiler (if applicable)  │   │
+│   │  │                                                              │   │
+│   │  │  Profiling workflows:                              │   │
+│   │  │  • Start profiling: Start profiler on demand  │   │
+│   │  │  • Stop profiling: Stop profiler after duration │   │
+│   │  │  • Export profile: Export profile for analysis  │   │
+│   │  │  • Analyze profile: Analyze profile in UI      │   │
+│   │  │  • Compare profiles: Compare profiles over time │   │
+│   │  │  • Optimize based on findings: Optimize code   │   │
+│   │  └─────────────────────────────────────────────────────────────┘   │
+│   │                                                              │
+│   │  PROFILING BEST PRACTICES                                     │   │
+│   │  ┌─────────────────────────────────────────────────────────────┐   │
+│   │  │  Profile in production-like environment: Profile in environment similar to production │   │
+│   │  │  Profile with realistic load: Profile with realistic load │   │
+│   │  │  Profile for sufficient duration: Profile for sufficient duration (at least 10 minutes) │   │
+│   │  │  Profile multiple times: Profile multiple times to get consistent results │   │
+│   │  │  Profile different scenarios: Profile different scenarios (normal, peak, stress) │   │
+│   │  │  Profile before and after: Profile before and after optimizations │   │
+│   │  │  Document findings: Document profiling findings and optimizations │   │
+│   │  │  Share findings: Share findings with team for learning │   │
+│   │  └─────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 53.5 CLI Commands
+
+```bash
+# Development setup commands
+applypilot dev setup
+applypilot dev start
+applypilot dev stop
+applypilot dev restart
+applypilot dev logs
+applypilot dev status
+
+# Mock services commands
+applypilot dev mock enable --service llm
+applypilot dev mock disable --service llm
+applypilot dev mock configure --service llm --response <json>
+applypilot dev mock record --service llm
+applypilot dev mock replay --service llm
+
+# Debugging commands
+applypilot debug attach --process <pid>
+applypilot debug inspect --request-id <id>
+applypilot debug trace --trace-id <id>
+applypilot debug logs --source gateway --level debug
+applypilot debug metrics --period 1h
+applypilot debug export --format json
+
+# Profiling commands
+applypilot profile start --type cpu --duration 10m
+applypilot profile start --type memory --duration 10m
+applypilot profile start --type io --duration 10m
+applypilot profile stop
+applypilot profile list
+applypilot profile compare --profile-id <id1> --profile-id <id2>
+applypilot profile analyze --profile-id <id>
+
+# Performance regression commands
+applypilot perf baseline establish --duration 7d
+applypilot perf baseline show
+applypilot perf regression check
+applypilot perf report --period 30d
+applypilot perf optimize --analyze
+```
+
+---
+
 ## 52) Next Steps
 
 ### Implementation Priority
