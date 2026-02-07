@@ -9,6 +9,7 @@ export * from './interview/index.js';
 export * from './learning/index.js';
 export * from './llm/index.js';
 export * from './memory/index.js';
+export * from './observability/index.js';
 export * from './plugin/index.js';
 export * from './reasoning/index.js';
 export * from './resilience/index.js';

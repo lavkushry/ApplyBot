@@ -36,3 +36,47 @@ export type {
   RetryResult,
   RetryPolicyStats,
 } from './retry-policy.js';
+
+// Dead Letter Queue
+export {
+  DeadLetterQueue,
+  getDeadLetterQueue,
+  getDefaultDLQConfig,
+} from './dead-letter-queue.js';
+export type {
+  DLQPriority,
+  DLQItem,
+  DLQConfig,
+  DLQStats,
+  DLQNotification,
+} from './dead-letter-queue.js';
+
+// Health Check
+export {
+  HealthCheckSystem,
+  HealthChecks,
+  getHealthCheckSystem,
+  getDefaultHealthCheckConfig,
+} from './health-check.js';
+export type {
+  HealthTier,
+  HealthStatus,
+  HealthCheckConfig,
+  HealthCheckResult,
+  HealthCheckSummary,
+  HealthCheckDefinition,
+} from './health-check.js';
+
+// Graceful Degradation
+export {
+  GracefulDegradation,
+  getGracefulDegradation,
+  getDefaultDegradationConfig,
+} from './graceful-degradation.js';
+export type {
+  DegradationLevel,
+  OperationPriority,
+  GracefulDegradationConfig,
+  DegradationState,
+  DegradationEvent,
+} from './graceful-degradation.js';
