@@ -77,6 +77,17 @@ export interface ConfigSchemaProperty {
   required?: string[];
 }
 
+export interface PluginManifest {
+  name: string;
+  version: string;
+  description?: string;
+  author?: string;
+  main: string;
+  dependencies?: string[];
+  capabilities?: string[];
+  configSchema?: ApplyPilotPluginManifest['configSchema'];
+}
+
 export interface ManifestValidationResult {
   valid: boolean;
   errors: string[];

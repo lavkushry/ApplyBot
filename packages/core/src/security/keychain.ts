@@ -355,14 +355,12 @@ export class KeychainManager {
 
   private async setPasswordLinux(account: string, password: string): Promise<void> {
     try {
-      await execFileAsync('secret-tool', [
-        'store',
-        '--label', `${SERVICE_NAME} - ${account}`,
-        'service', SERVICE_NAME,
-        'account', account,
-      ], {
-        input: password,
-      });
+      // secret-tool expects password via stdin, but execFile doesn't support input option
+      // We'll use echo piped to secret-tool via shell for now
+      const { exec } = await import('child_process');
+      const execAsync = promisify(exec);
+      const command = `echo "${password.replace(/"/g, '\\"')}" | secret-tool store --label "${SERVICE_NAME} - ${account}" service "${SERVICE_NAME}" account "${account}"`;
+      await execAsync(command);
     } catch (error) {
       throw new Error(`Failed to store password in Linux Secret Service: ${error}`);
     }
