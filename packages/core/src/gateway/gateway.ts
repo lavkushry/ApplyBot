@@ -20,6 +20,8 @@ import type {
   JobStage,
 } from './types.js';
 import { SessionManager } from './session-manager.js';
+import { getHealthCheckSystem, HealthChecks } from '../resilience/health-check.js';
+import { getMetricsCollector } from '../observability/metrics.js';
 
 export interface GatewayOptions {
   config?: Partial<GatewayConfig>;
@@ -334,17 +336,26 @@ export class Gateway extends EventEmitter {
   }
 
   private setupDefaultHandlers(): void {
-    // Health check handler
-    this.registerHandler('/health', () => ({
-      status: 200,
-      body: { status: 'healthy', stats: this.getStats() },
-    }));
+    // L1 - Basic health check (fast, checks core connectivity)
+    this.registerHandler('/health', () => this.handleL1HealthCheck());
+
+    // L2 - Deep health check (checks components, tools, sessions)
+    this.registerHandler('/health/deep', () => this.handleL2HealthCheck());
+
+    // L3 - Dependency health check (checks external services)
+    this.registerHandler('/health/dependencies', () => this.handleL3HealthCheck());
+
+    // Combined health summary
+    this.registerHandler('/health/summary', () => this.handleHealthSummary());
 
     // Stats handler
     this.registerHandler('/stats', () => ({
       status: 200,
       body: this.getStats(),
     }));
+
+    // Metrics endpoint for Prometheus
+    this.registerHandler('/metrics', () => this.handleMetrics());
 
     // Sessions handler
     this.registerHandler('/sessions', () => ({
@@ -359,6 +370,167 @@ export class Gateway extends EventEmitter {
         })),
       },
     }));
+  }
+
+  /**
+   * L1 Health Check - Basic connectivity (target: <1s response, 99.9% uptime)
+   */
+  private handleL1HealthCheck(): GatewayResponse {
+    const healthCheck = getHealthCheckSystem();
+    
+    // Register L1 checks if not already registered
+    if (!healthCheck.getResult('gateway-connectivity')) {
+      healthCheck.register(HealthChecks.gatewayConnectivity());
+      healthCheck.register(HealthChecks.llmReachability());
+      healthCheck.register(HealthChecks.databaseAccessibility());
+    }
+
+    const summary = healthCheck.getSummary();
+    const l1Tier = summary.tiers.L1;
+
+    return {
+      status: l1Tier.status === 'healthy' ? 200 : l1Tier.status === 'degraded' ? 200 : 503,
+      body: {
+        level: 'L1',
+        status: l1Tier.status,
+        timestamp: new Date().toISOString(),
+        uptime: this.getStats().uptimeSeconds,
+        checks: l1Tier.checks.map(c => ({
+          component: c.component,
+          status: c.status,
+          responseTime: c.responseTime,
+        })),
+      },
+    };
+  }
+
+  /**
+   * L2 Health Check - Deep component checks (target: <5s response, 99.5% uptime)
+   */
+  private handleL2HealthCheck(): GatewayResponse {
+    const healthCheck = getHealthCheckSystem();
+    
+    // Register L2 checks
+    const tools = ['analyze_jd', 'tailor_resume', 'compile_pdf', 'memory_search'];
+    for (const tool of tools) {
+      if (!healthCheck.getResult(`tool-${tool}`)) {
+        healthCheck.register(HealthChecks.toolAvailability(tool));
+      }
+    }
+
+    if (!healthCheck.getResult('session-manager')) {
+      healthCheck.register(HealthChecks.sessionManagerHealth());
+      healthCheck.register(HealthChecks.memorySystemHealth());
+    }
+
+    const summary = healthCheck.getSummary();
+    const l2Tier = summary.tiers.L2;
+
+    return {
+      status: l2Tier.status === 'healthy' ? 200 : l2Tier.status === 'degraded' ? 200 : 503,
+      body: {
+        level: 'L2',
+        status: l2Tier.status,
+        timestamp: new Date().toISOString(),
+        checks: l2Tier.checks.map(c => ({
+          component: c.component,
+          status: c.status,
+          responseTime: c.responseTime,
+          message: c.message,
+        })),
+        degradedComponents: summary.degradedComponents,
+        unhealthyComponents: summary.unhealthyComponents,
+      },
+    };
+  }
+
+  /**
+   * L3 Health Check - External dependencies (target: <30s response, 99.0% uptime)
+   */
+  private handleL3HealthCheck(): GatewayResponse {
+    const healthCheck = getHealthCheckSystem();
+    
+    // Register L3 checks
+    const portals = ['linkedin', 'greenhouse', 'lever', 'indeed'];
+    for (const portal of portals) {
+      if (!healthCheck.getResult(`portal-${portal}`)) {
+        healthCheck.register(HealthChecks.portalAPIReachability(portal));
+      }
+    }
+
+    const summary = healthCheck.getSummary();
+    const l3Tier = summary.tiers.L3;
+
+    return {
+      status: l3Tier.status === 'healthy' ? 200 : l3Tier.status === 'degraded' ? 200 : 503,
+      body: {
+        level: 'L3',
+        status: l3Tier.status,
+        timestamp: new Date().toISOString(),
+        checks: l3Tier.checks.map(c => ({
+          component: c.component,
+          status: c.status,
+          responseTime: c.responseTime,
+        })),
+      },
+    };
+  }
+
+  /**
+   * Combined health summary across all tiers
+   */
+  private handleHealthSummary(): GatewayResponse {
+    const healthCheck = getHealthCheckSystem();
+    const summary = healthCheck.getSummary();
+
+    return {
+      status: summary.overall === 'healthy' ? 200 : summary.overall === 'degraded' ? 200 : 503,
+      body: {
+        overall: summary.overall,
+        timestamp: new Date().toISOString(),
+        uptime: this.getStats().uptimeSeconds,
+        tiers: {
+          L1: { status: summary.tiers.L1.status, responseTime: summary.tiers.L1.responseTime },
+          L2: { status: summary.tiers.L2.status, responseTime: summary.tiers.L2.responseTime },
+          L3: { status: summary.tiers.L3.status, responseTime: summary.tiers.L3.responseTime },
+        },
+        degradedComponents: summary.degradedComponents,
+        unhealthyComponents: summary.unhealthyComponents,
+      },
+    };
+  }
+
+  /**
+   * Metrics endpoint for Prometheus
+   */
+  private handleMetrics(): GatewayResponse {
+    const metrics = getMetricsCollector();
+    const snapshots = metrics.getAllSnapshots();
+
+    // Format as Prometheus exposition format
+    let output = '# ApplyPilot Metrics\n';
+    
+    for (const snapshot of snapshots) {
+      output += `# HELP ${snapshot.name} ${snapshot.type} metric\n`;
+      output += `# TYPE ${snapshot.name} ${snapshot.type}\n`;
+      output += `${snapshot.name} ${snapshot.stats.count}\n`;
+    }
+
+    // Add gateway-specific metrics
+    const stats = this.getStats();
+    output += '# HELP gateway_active_sessions Current active sessions\n';
+    output += '# TYPE gateway_active_sessions gauge\n';
+    output += `gateway_active_sessions ${stats.activeSessions}\n`;
+    
+    output += '# HELP gateway_uptime_seconds Gateway uptime in seconds\n';
+    output += '# TYPE gateway_uptime_seconds gauge\n';
+    output += `gateway_uptime_seconds ${stats.uptimeSeconds}\n`;
+
+    return {
+      status: 200,
+      body: output,
+      headers: { 'Content-Type': 'text/plain' },
+    };
   }
 
   private startHeartbeat(): void {

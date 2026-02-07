@@ -20,6 +20,10 @@ import type {
     ToolApprovalResponse,
     ToolDefinition,
 } from './types.js';
+import { createCircuitBreaker, CircuitBreaker } from '../resilience/circuit-breaker.js';
+import { getRetryPolicy, RetryPolicy } from '../resilience/retry-policy.js';
+import { getDeadLetterQueue } from '../resilience/dead-letter-queue.js';
+import { getMetricsCollector, TechnicalMetrics } from '../observability/metrics.js';
 
 export interface AgentRuntimeOptions {
   llmAdapter: LLMAdapter;
@@ -36,6 +40,10 @@ export class AgentRuntime extends EventEmitter {
   private tools = new Map<string, ToolDefinition>();
   private state: AgentState;
   private pendingApprovals = new Map<string, ToolApprovalRequest>();
+  private circuitBreakers = new Map<string, CircuitBreaker>();
+  private retryPolicies = new Map<string, RetryPolicy>();
+  private metrics = getMetricsCollector();
+  private dlq = getDeadLetterQueue();
 
   constructor(options: AgentRuntimeOptions) {
     super();
@@ -61,7 +69,32 @@ export class AgentRuntime extends EventEmitter {
       currentIteration: 0,
     };
 
+    this.initializeResilience();
     this.registerDefaultTools();
+  }
+
+  /**
+   * Initialize circuit breakers and retry policies for tools
+   */
+  private initializeResilience(): void {
+    // Initialize circuit breakers for critical tools
+    const criticalTools = ['analyze_jd', 'tailor_resume', 'compile_pdf', 'portal_autofill'];
+    for (const tool of criticalTools) {
+      this.circuitBreakers.set(
+        tool,
+        createCircuitBreaker(tool, {
+          failureThreshold: 5,
+          successThreshold: 2,
+          openTimeout: 60000,
+        })
+      );
+    }
+
+    // Initialize retry policies
+    this.retryPolicies.set('llm', getRetryPolicy('llm'));
+    this.retryPolicies.set('network', getRetryPolicy('network'));
+    this.retryPolicies.set('portal', getRetryPolicy('portal'));
+    this.retryPolicies.set('pdf', getRetryPolicy('pdf'));
   }
 
   /**
@@ -148,7 +181,32 @@ export class AgentRuntime extends EventEmitter {
           temperature: this.config.temperature,
           maxTokens: this.config.maxTokens,
         };
-        const response = await this.llmAdapter.complete(request);
+
+        // Execute LLM call with retry policy
+        const llmRetryPolicy = this.retryPolicies.get('llm');
+        let response;
+
+        if (llmRetryPolicy) {
+          const llmStartTime = Date.now();
+          const retryResult = await llmRetryPolicy.execute(async () => {
+            return await this.llmAdapter.complete(request);
+          }, { operation: 'llm_completion' });
+
+          if (retryResult.success && retryResult.result) {
+            response = retryResult.result;
+          } else {
+            throw new Error(retryResult.error?.message || 'LLM call failed after retries');
+          }
+
+          // Record LLM metrics
+          this.metrics.record('operation_latency_ms', Date.now() - llmStartTime, {
+            operation: 'llm_completion',
+            tool: 'llm',
+            status: 'success',
+          });
+        } else {
+          response = await this.llmAdapter.complete(request);
+        }
 
         totalTokensUsed += response.usage?.totalTokens || 0;
         this.sessionManager.updateMetrics(sessionId, {
@@ -381,6 +439,7 @@ export class AgentRuntime extends EventEmitter {
 
   private async executeTool(toolCall: ToolCall): Promise<ToolResult> {
     const tool = this.tools.get(toolCall.name);
+    const startTime = Date.now();
 
     if (!tool) {
       return {
@@ -391,18 +450,117 @@ export class AgentRuntime extends EventEmitter {
       };
     }
 
-    try {
-      const result = await tool.handler(toolCall.arguments);
-      return result;
-    } catch (error) {
-      return {
-        toolCallId: toolCall.id,
-        status: 'error',
-        result: {
-          error: error instanceof Error ? error.message : String(error),
-        },
-        executionTimeMs: 0,
-      };
+    // Get circuit breaker for this tool
+    const circuitBreaker = this.circuitBreakers.get(toolCall.name);
+
+    // Get retry policy based on tool type
+    let retryPolicy: RetryPolicy | undefined;
+    if (toolCall.name.includes('portal')) {
+      retryPolicy = this.retryPolicies.get('portal');
+    } else if (toolCall.name.includes('pdf')) {
+      retryPolicy = this.retryPolicies.get('pdf');
+    } else {
+      retryPolicy = this.retryPolicies.get('network');
+    }
+
+    // Execute with circuit breaker
+    const executeWithResilience = async (): Promise<ToolResult> => {
+      try {
+        let result: ToolResult;
+
+        if (retryPolicy) {
+          // Execute with retry policy
+          const retryResult = await retryPolicy.execute(async () => {
+            return await tool.handler(toolCall.arguments);
+          }, { operation: toolCall.name });
+
+          if (retryResult.success && retryResult.result) {
+            result = retryResult.result as ToolResult;
+          } else {
+            result = {
+              toolCallId: toolCall.id,
+              status: 'error',
+              result: { error: retryResult.error?.message || 'Tool execution failed after retries' },
+              executionTimeMs: Date.now() - startTime,
+            };
+          }
+        } else {
+          // Execute without retry
+          result = await tool.handler(toolCall.arguments);
+        }
+
+        // Record metrics
+        const duration = Date.now() - startTime;
+        this.metrics.record('operation_latency_ms', duration, {
+          operation: 'tool_execution',
+          tool: toolCall.name,
+          status: result.status,
+        });
+
+        if (result.status === 'error') {
+          this.metrics.increment('operation_errors_total', {
+            operation: 'tool_execution',
+            tool: toolCall.name,
+            error_type: 'execution_error',
+          });
+        }
+
+        return result;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+
+        // Add to DLQ for critical failures
+        if (circuitBreaker) {
+          this.dlq.add(
+            toolCall.name,
+            toolCall.arguments,
+            error instanceof Error ? error : new Error(errorMessage),
+            'high'
+          );
+        }
+
+        // Record error metrics
+        this.metrics.increment('operation_errors_total', {
+          operation: 'tool_execution',
+          tool: toolCall.name,
+          error_type: error instanceof Error ? error.name : 'unknown',
+        });
+
+        return {
+          toolCallId: toolCall.id,
+          status: 'error',
+          result: { error: errorMessage },
+          executionTimeMs: Date.now() - startTime,
+        };
+      }
+    };
+
+    // Execute with circuit breaker if available
+    if (circuitBreaker) {
+      try {
+        return await circuitBreaker.execute(() => executeWithResilience());
+      } catch (error) {
+        // Circuit breaker is open
+        const errorMessage = error instanceof Error ? error.message : String(error);
+
+        // Record circuit breaker metrics
+        this.metrics.record('circuit_breaker_state', 1, {
+          tool: toolCall.name,
+          state: circuitBreaker.getState(),
+        });
+
+        return {
+          toolCallId: toolCall.id,
+          status: 'error',
+          result: {
+            error: `Circuit breaker is open: ${errorMessage}`,
+            circuitBreakerState: circuitBreaker.getState(),
+          },
+          executionTimeMs: Date.now() - startTime,
+        };
+      }
+    } else {
+      return await executeWithResilience();
     }
   }
 
