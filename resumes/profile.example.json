@@ -1,0 +1,105 @@
+{
+  "personal": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "phone": "+1 (555) 123-4567",
+    "location": "San Francisco, CA",
+    "linkedin": "linkedin.com/in/johndoe",
+    "github": "github.com/johndoe",
+    "portfolio": "johndoe.dev"
+  },
+  "summary": "Senior Software Engineer with 8+ years of experience building scalable web applications. Expert in React, TypeScript, and Node.js. Passionate about clean code, system design, and mentoring junior developers. Track record of leading teams to deliver high-impact features for millions of users.",
+  "skills": {
+    "technical": [
+      "React",
+      "TypeScript",
+      "Node.js",
+      "Python",
+      "GraphQL",
+      "PostgreSQL",
+      "AWS",
+      "Docker",
+      "Kubernetes",
+      "CI/CD",
+      "System Design",
+      "Microservices"
+    ],
+    "soft": [
+      "Leadership",
+      "Communication",
+      "Problem Solving",
+      "Team Collaboration",
+      "Mentoring"
+    ],
+    "languages": ["English (Native)", "Spanish (Conversational)"]
+  },
+  "experience": [
+    {
+      "id": "exp1",
+      "company": "TechCorp Inc.",
+      "title": "Senior Software Engineer",
+      "location": "San Francisco, CA",
+      "startDate": "2021-03",
+      "endDate": null,
+      "current": true,
+      "bullets": [
+        "Led development of microservices architecture serving 10M+ daily active users",
+        "Reduced API response times by 40% through caching strategies and query optimization",
+        "Mentored team of 5 junior engineers, improving code quality by 35%",
+        "Implemented CI/CD pipelines reducing deployment time from 2 hours to 15 minutes"
+      ],
+      "skills": ["React", "TypeScript", "Node.js", "AWS", "Kubernetes"]
+    },
+    {
+      "id": "exp2",
+      "company": "StartupXYZ",
+      "title": "Software Engineer",
+      "location": "Remote",
+      "startDate": "2018-06",
+      "endDate": "2021-02",
+      "current": false,
+      "bullets": [
+        "Built real-time collaboration features using WebSockets and Redis",
+        "Developed RESTful APIs handling 1M+ requests per day",
+        "Implemented automated testing suite achieving 90% code coverage"
+      ],
+      "skills": ["React", "Node.js", "PostgreSQL", "Redis"]
+    }
+  ],
+  "education": [
+    {
+      "id": "edu1",
+      "institution": "University of California, Berkeley",
+      "degree": "Bachelor of Science",
+      "field": "Computer Science",
+      "location": "Berkeley, CA",
+      "startDate": "2014-08",
+      "endDate": "2018-05",
+      "gpa": "3.8"
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj1",
+      "name": "Open Source Analytics Dashboard",
+      "description": "Real-time analytics dashboard for monitoring application performance",
+      "url": "github.com/johndoe/analytics-dashboard",
+      "bullets": [
+        "Built with React, TypeScript, and D3.js",
+        "Processes 100K+ events per second",
+        "500+ GitHub stars"
+      ],
+      "skills": ["React", "TypeScript", "D3.js", "WebSockets"]
+    }
+  ],
+  "certifications": [
+    {
+      "id": "cert1",
+      "name": "AWS Solutions Architect - Professional",
+      "issuer": "Amazon Web Services",
+      "date": "2022-06",
+      "url": "https://www.credly.com/badges/example"
+    }
+  ]
+}

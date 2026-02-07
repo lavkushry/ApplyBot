@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@applypilot/core": ["packages/core/src"],
+      "@applypilot/jd": ["packages/jd/src"],
+      "@applypilot/resume": ["packages/resume/src"],
+      "@applypilot/pdf": ["packages/pdf/src"],
+      "@applypilot/portals": ["packages/portals/src"],
+      "@applypilot/tracker": ["packages/tracker/src"],
+      "@applypilot/licenses": ["packages/licenses/src"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}

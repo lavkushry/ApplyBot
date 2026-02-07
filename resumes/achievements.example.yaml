@@ -1,0 +1,85 @@
+# Achievement Bank for Resume Tailoring
+# These STAR-format achievements can be mixed and matched for different job applications
+
+achievements:
+  - id: perf_optimization
+    category: work
+    context: TechCorp Inc.
+    action: Optimized database queries and implemented Redis caching
+    result: Reduced API response times by 40% and saved $50K/month in infrastructure costs
+    skills: ["PostgreSQL", "Redis", "Performance Optimization"]
+    metrics: ["40% faster", "$50K saved"]
+    tags: ["backend", "performance", "cost-savings"]
+
+  - id: microservices_migration
+    category: work
+    context: TechCorp Inc.
+    action: Led migration from monolith to microservices architecture
+    result: Improved deployment frequency from weekly to daily, reduced downtime by 99%
+    skills: ["Microservices", "Kubernetes", "Docker", "AWS"]
+    metrics: ["99% uptime", "Daily deployments"]
+    tags: ["architecture", "devops", "leadership"]
+
+  - id: team_scaling
+    category: work
+    context: TechCorp Inc.
+    action: Hired and mentored team of 5 junior engineers
+    result: Improved team velocity by 60% and code review turnaround time by 50%
+    skills: ["Leadership", "Mentoring", "Hiring"]
+    metrics: ["60% velocity increase", "50% faster reviews"]
+    tags: ["leadership", "mentoring", "team-building"]
+
+  - id: real_time_features
+    category: work
+    context: StartupXYZ
+    action: Built real-time collaboration using WebSockets and Redis pub/sub
+    result: Enabled 10K+ concurrent users to collaborate simultaneously
+    skills: ["WebSockets", "Redis", "Real-time Systems"]
+    metrics: ["10K+ concurrent users"]
+    tags: ["backend", "real-time", "scaling"]
+
+  - id: testing_infrastructure
+    category: work
+    context: StartupXYZ
+    action: Implemented comprehensive testing suite with Jest and Cypress
+    result: Achieved 90% code coverage and reduced bug escape rate by 70%
+    skills: ["Testing", "Jest", "Cypress", "CI/CD"]
+    metrics: ["90% coverage", "70% fewer bugs"]
+    tags: ["testing", "quality", "automation"]
+
+  - id: open_source_dashboard
+    category: project
+    context: Personal Project
+    action: Built open-source analytics dashboard with React and D3.js
+    result: Gained 500+ GitHub stars and used by 100+ developers
+    skills: ["React", "D3.js", "TypeScript", "Open Source"]
+    metrics: ["500+ stars", "100+ users"]
+    tags: ["frontend", "data-viz", "open-source"]
+
+  - id: aws_certification
+    category: certification
+    context: Professional Development
+    action: Studied for and passed AWS Solutions Architect Professional exam
+    result: Achieved certification with score of 95%
+    skills: ["AWS", "Cloud Architecture", "System Design"]
+    metrics: ["95% score"]
+    tags: ["certification", "cloud", "learning"]
+
+  - id: hackathon_winner
+    category: project
+    context: TechCrunch Disrupt Hackathon
+    action: Led team of 4 to build AI-powered code review tool in 24 hours
+    result: Won 1st place and $10K prize
+    skills: ["AI/ML", "Python", "React", "Team Leadership"]
+    metrics: ["1st place", "$10K prize"]
+    tags: ["hackathon", "ai", "leadership"]
+
+# Template for adding new achievements
+# - id: unique_identifier
+#   category: work | project | education | certification
+#   context: Company or Project Name
+#   action: What you did (start with verb)
+#   result: Measurable outcome
+#   skills: ["Skill1", "Skill2"]
+#   metrics: ["X% improvement", "$Y saved"]
+#   tags: ["tag1", "tag2"]

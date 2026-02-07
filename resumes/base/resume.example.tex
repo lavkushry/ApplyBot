@@ -1,0 +1,89 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+
+% Custom section formatting
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}[\titlerule]
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+
+\begin{document}
+
+% Header
+\begin{center}
+    {\LARGE\bfseries John Doe}\\[6pt]
+    San Francisco, CA $\cdot$ john.doe@example.com $\cdot$ +1-555-123-4567\\
+    \href{https://linkedin.com/in/johndoe}{linkedin.com/in/johndoe} $\cdot$ \href{https://github.com/johndoe}{github.com/johndoe} $\cdot$ \href{https://johndoe.dev}{johndoe.dev}
+\end{center}
+
+\vspace{6pt}
+
+% Summary Section
+<!-- SUMMARY_START -->
+\section{Summary}
+Experienced software engineer with 5+ years in full-stack development, specializing in React, Node.js, and cloud infrastructure. Passionate about building scalable applications and mentoring junior developers.
+<!-- SUMMARY_END -->
+
+% Skills Section
+<!-- SKILLS_START -->
+\section{Skills}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Languages:} JavaScript, TypeScript, Python
+    \item \textbf{Frontend:} React, HTML5, CSS3, D3.js
+    \item \textbf{Backend:} Node.js, Express, GraphQL, REST APIs
+    \item \textbf{Cloud \& DevOps:} AWS, Docker, Kubernetes, Terraform, CI/CD
+    \item \textbf{Databases:} PostgreSQL, MongoDB, Redis
+\end{itemize}
+<!-- SKILLS_END -->
+
+% Experience Section
+<!-- EXPERIENCE_START -->
+\section{Experience}
+
+\textbf{Senior Software Engineer} \hfill Mar 2021 -- Present\\
+\textit{TechCorp Inc., San Francisco, CA}
+\begin{itemize}[leftmargin=*]
+    \item Led development of microservices architecture serving 1M+ daily active users
+    \item Reduced API response times by 40\% through optimization and caching strategies
+    \item Mentored team of 5 junior engineers, improving code quality by 30\%
+    \item Implemented CI/CD pipelines reducing deployment time from 2 hours to 15 minutes
+\end{itemize}
+
+\vspace{6pt}
+
+\textbf{Software Engineer} \hfill Jun 2019 -- Feb 2021\\
+\textit{StartupXYZ, Remote}
+\begin{itemize}[leftmargin=*]
+    \item Built full-stack web application from scratch using React and Node.js
+    \item Implemented real-time features using WebSockets, serving 50K concurrent users
+    \item Designed and optimized PostgreSQL database schema for 10M+ records
+\end{itemize}
+<!-- EXPERIENCE_END -->
+
+% Projects Section
+<!-- PROJECTS_START -->
+\section{Projects}
+
+\textbf{Open Source Dashboard} \hfill \href{https://github.com/johndoe/dashboard}{github.com/johndoe/dashboard}
+\begin{itemize}[leftmargin=*]
+    \item Real-time analytics dashboard for monitoring system metrics
+    \item Built with React, D3.js, and Node.js
+    \item Featured on Hacker News with 500+ stars on GitHub
+\end{itemize}
+<!-- PROJECTS_END -->
+
+% Education Section
+\section{Education}
+
+\textbf{Bachelor of Science in Computer Science} \hfill Sep 2015 -- May 2019\\
+\textit{University of Technology, San Francisco, CA}\\
+GPA: 3.8/4.0
+
+% Certifications Section
+\section{Certifications}
+
+\textbf{AWS Solutions Architect Associate} -- Amazon Web Services \hfill Mar 2022
+
+\end{document}
