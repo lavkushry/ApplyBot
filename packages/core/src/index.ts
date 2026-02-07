@@ -1,5 +1,6 @@
 // Core exports for ApplyPilot
 export * from './agent/index.js';
+export * from './audit/index.js';
 export * from './bootstrap/index.js';
 export * from './browser/index.js';
 export * from './config/index.js';
@@ -8,6 +9,7 @@ export * from './gateway/index.js';
 export * from './interview/index.js';
 export * from './learning/index.js';
 export * from './llm/index.js';
+export * from './logging/index.js';
 export * from './memory/index.js';
 export * from './observability/index.js';
 export * from './plugin/index.js';

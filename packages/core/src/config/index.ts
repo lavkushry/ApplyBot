@@ -289,3 +289,15 @@ export type {
   ConfigChangeEvent,
   ConfigValidator,
 } from './hot-reload.js';
+
+// Secrets manager exports
+export {
+  SecretsManager,
+  getSecretsManager,
+  redactSensitiveInfo,
+} from './secrets-manager.js';
+export type {
+  Secret,
+  SecretsConfig,
+  RedactionRule,
+} from './secrets-manager.js';
